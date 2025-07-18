@@ -59,7 +59,7 @@ public class Program
         Console.WriteLine("TinyScript REPL CLI Version V1.0.0");
 
         Console.WriteLine();
-        while (true)//var a = {name:"hello",shabi:true};
+        while (true)
         {
             Console.Write("TinyScript> ");
             string script = Console.ReadLine();
