@@ -64,4 +64,21 @@ function funcName(arg1,arg2){
 ```
 如果没有在函数中返回任何值，那么默认返回null
 
+### 5.集合定义
 
+```javascript
+var array = [1,2.5,"hello",true,[5,6,7]];
+println(arr[2]);  //输出hello
+println(arr[4][0]); //输出5
+```
+
+### 6.对象定义
+
+```javascript
+//定义对象
+var obj = {
+  key1: "strValue",
+  key2: 123,
+  key3: { test : true }
+}
+```
