@@ -47,9 +47,9 @@ while(a < 10){
 
 ```javascript
 try{
-	//可能会出错的代码
+   //可能会出错的代码
 }catch(ex){
-	println(ex); //捕获到的异常ex为STRING类型
+   println(ex); //捕获到的异常ex为STRING类型
 }
 ```
 
@@ -57,9 +57,10 @@ try{
 
 ```javascript
 function funcName(arg1,arg2){
-	//函数代码
-	return result;
+   //函数代码
+   return result;
 }
 ```
 如果没有在函数中返回任何值，那么默认返回null
+
 
