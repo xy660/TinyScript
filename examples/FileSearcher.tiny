@@ -1,0 +1,39 @@
+function searchFiles(path, keyword,match,error) {
+    try {
+        var files = listFile(path);
+        for (file : files) {
+            if (strContains(file, keyword)) {
+                println("[Matched] " + file);
+		match++;
+            }
+        }
+
+        var dirs = listDir(path);
+        for (dir : dirs) {
+            searchFiles(dir, keyword,match,error);
+        }
+    } catch (ex) {
+        println("[error] " + path + ": " + ex);
+	error++;
+    }
+}
+
+println("┌───────────────────────┐");
+println("│ TinyScript 文件搜索器 │");
+println("└───────────────────────┘");
+
+println("请输入要搜索的目录路径：");
+var search_path = readln();
+
+println("请输入要查找的关键字：");
+var search_key = readln();
+
+println("正在扫描，请稍候...");
+println("----------------------------------");
+var matchCount = 0;
+var errorCount = 0;
+searchFiles(search_path, search_key,matchCount,errorCount);
+println("----------------------------------");
+println("搜索完成！");
+println("匹配：" + matchCount + "，错误：" + errorCount);
+readln();
