@@ -389,7 +389,7 @@ namespace ScriptRuntime.Core
                 }
                 catch(ContuineException ex)
                 {
-                    break;
+                    continue;
                 }
             }
             localVariable.Remove(forEachVar);
