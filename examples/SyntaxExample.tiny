@@ -1,0 +1,27 @@
+function a(y)
+{
+    function b(x)
+    {
+        println("b() called => " + x);
+    }
+    println("a() called => " + y);
+}
+
+a("function a");
+b("function b");
+
+var arr = [1,"2",true];
+println(arr);
+
+println("1 == \"1\" result:" + (1 == "1"));
+
+for(i : range(0,5,1))
+	println("for-range: " + i);
+
+var person = {name:"boo",age:20,showInfo:function(){println("name=" + this.name + " age=" + this.age);}};
+person.showInfo();
+
+var myadd = function(a,b){return a+b;};
+println("myadd(1,2)=" + myadd(1,2));
+
+readln(); //wait

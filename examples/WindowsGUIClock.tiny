@@ -1,0 +1,121 @@
+// ===== 1. 加载必要的API =====
+// 时间获取函数
+try {
+    ffiload("kernel32.dll", "GetTickCount", "", "int");
+
+    // GDI绘图函数
+    ffiload("gdi32.dll", "CreateCompatibleDC", "int", "int");
+    ffiload("gdi32.dll", "CreateCompatibleBitmap", "int,int,int", "int");
+    ffiload("gdi32.dll", "SelectObject", "int,int", "int");
+    ffiload("gdi32.dll", "DeleteDC", "int", "int");
+    ffiload("gdi32.dll", "DeleteObject", "int", "int");
+    ffiload("gdi32.dll", "BitBlt", "int,int,int,int,int,int,int,int,int", "int");
+    ffiload("gdi32.dll", "Ellipse", "int,int,int,int,int", "int");
+    ffiload("gdi32.dll", "MoveToEx", "int,int,int,int", "int");
+    ffiload("gdi32.dll", "LineTo", "int,int,int", "int");
+    ffiload("gdi32.dll", "SetBkMode", "int,int", "int");
+
+    // 屏幕DC函数
+    ffiload("user32.dll", "GetDC", "int", "int");
+    ffiload("user32.dll", "ReleaseDC", "int,int", "int");
+} catch (ex) {
+    println("Error: this demo can only run on Windows because it require Win32 GDI APIs")
+}
+
+// ===== 2. 常量定义 =====
+var SRCCOPY = 13369376;    // 0x00CC0020
+var TRANSPARENT = 1;       // 透明背景模式
+var PI = 3.14159265;
+
+// ===== 4. 时钟绘制函数 =====
+function drawClock(hdc, x, y, size) {
+
+    var TRANSPARENT = 1;       // 透明背景模式
+    var PI = 3.14159265;
+
+    var totalSeconds = unixTimeLocal() / 1000 % 86400;  // 取当天剩余秒数（86400=24 * 60 * 60）
+
+    // 计算时分秒
+    var hour = floor(totalSeconds / 3600);
+    var minute = floor((totalSeconds % 3600) / 60);
+    var second = totalSeconds % 60;
+
+    //println("Now Time: " + hour + " : " + minute + " : " + second);
+
+    // 计算中心点
+    var centerX = x + size / 2;
+    var centerY = y + size / 2;
+
+    // 绘制表盘
+    Ellipse(hdc, x, y, x + size, y + size);
+
+    // 设置透明背景
+    SetBkMode(hdc, TRANSPARENT);
+
+    // 绘制时针（长度30%）
+    var hourAngle = (hour % 12) * 30 + minute * 0.5;
+    hourAngle = hourAngle * PI / 180;
+    var hourX = centerX + size * 0.3 * sin(hourAngle);
+    var hourY = centerY - size * 0.3 * cos(hourAngle);
+    MoveToEx(hdc, centerX, centerY, 0);
+    LineTo(hdc, hourX, hourY);
+
+    // 绘制分针（长度45%）
+    var minuteAngle = minute * 6 * PI / 180;
+    var minuteX = centerX + size * 0.45 * sin(minuteAngle);
+    var minuteY = centerY - size * 0.45 * cos(minuteAngle);
+    MoveToEx(hdc, centerX, centerY, 0);
+    LineTo(hdc, minuteX, minuteY);
+
+    // 绘制秒针（长度40%）
+    var secondAngle = second * 6 * PI / 180;
+    var secondX = centerX + size * 0.4 * sin(secondAngle);
+    var secondY = centerY - size * 0.4 * cos(secondAngle);
+    MoveToEx(hdc, centerX, centerY, 0);
+    LineTo(hdc, secondX, secondY);
+}
+
+function drawClockFace(hdc, centerX, centerY, radius) {
+    // 绘制表盘刻度
+    for (angle : range(0, 360, 30)) {
+        var rad = angle * 3.1415926 / 180;
+        var x1 = centerX + (radius * 0.9) * sin(rad);
+        var y1 = centerY - (radius * 0.9) * cos(rad);
+        var x2 = centerX + radius * sin(rad);
+        var y2 = centerY - radius * cos(rad);
+        MoveToEx(hdc, x1, y1, 0);
+        LineTo(hdc, x2, y2);
+    }
+}
+
+println("Clock drawing start...");
+
+var hdcScreen = GetDC(0);
+var hdcMem = CreateCompatibleDC(hdcScreen);
+var hBitmap = CreateCompatibleBitmap(hdcScreen, 300, 300);
+var hOld = SelectObject(hdcMem, hBitmap);
+
+// 主循环
+while (true) {
+    // 清空内存DC
+    BitBlt(hdcMem, 0, 0, 300, 300, 0, 0, 0, SRCCOPY);
+
+    // 绘制时钟
+    drawClock(hdcMem, 0, 0, 300);
+
+    drawClockFace(hdcMem, 150, 150, 150);
+
+    // 拷贝到屏幕
+    BitBlt(hdcScreen, 100, 100, 300, 300, hdcMem, 0, 0, SRCCOPY);
+
+    // 每秒刷新
+    sleep(10);
+}
+
+// 清理资源
+SelectObject(hdcMem, hOld);
+DeleteObject(hBitmap);
+DeleteDC(hdcMem);
+ReleaseDC(0, hdcScreen);
+
+

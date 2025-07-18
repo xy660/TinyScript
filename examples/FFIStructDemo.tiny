@@ -1,0 +1,22 @@
+var timeObj = { 
+    wYear: 0,
+    wMonth: 0, 
+    wDayOfWeek: 0, 
+    wDay: 0, wHour: 0, 
+    wMinute: 0, wSecond: 0,
+    wMilliseconds: 0 
+    };
+
+//Load native api
+ffiload("kernel32.dll", "GetLocalTime", "ptr", "ptr");
+println("load GetSystemTime success");
+//Convert Tinyscript object to ptr
+var st = objectToPtr(timeObj,"wYear:ushort,wMonth:ushort,wDayOfWeek:ushort,wDay:ushort,wHour:ushort,wMinute:ushort,wSecond:ushort,wMilliseconds:ushort");
+println("convert to ptr success");
+//Call native api
+GetLocalTime(st);
+println("call native function success");
+//convert ptr to object
+var time = ptrToObject(st,"wYear:ushort,wMonth:ushort,wDayOfWeek:ushort,wDay:ushort,wHour:ushort,wMinute:ushort,wSecond:ushort,wMilliseconds:ushort");
+println("convert to object success");
+println("Time= " + time.wYear + "-" + time.wMonth + "-" + time.wDay + " " + time.wHour + ":" + time.wMinute);
