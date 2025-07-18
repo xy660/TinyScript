@@ -129,3 +129,8 @@ FunctionTable.Add("println", new ScriptFunction("println",
 ```
 
 ---
+
+[知乎文章(1)](https://zhuanlan.zhihu.com/p/1929188026011058240)
+[知乎文章(2)](https://zhuanlan.zhihu.com/p/1929561902754828527)
+
+
