@@ -6,10 +6,10 @@
 ### 1. 变量定义
 ```javascript
 // 类型自动推导
-var a = 10          // 数字 NUM类型
-var b = 3.14        // 数字 NUM类型
-var c = "hello"     // 字符串 STRING类型
-var d = true        // 布尔值 BOOL类型
+var a = 1;          // 数字 NUM类型
+var b = 3.14;        // 数字 NUM类型
+var c = "hello";     // 字符串 STRING类型
+var d = true;        // 布尔值 BOOL类型
 var f = function(a,b){return a + b;}; //匿名函数 FUNCTION类型
 
 ```
@@ -18,11 +18,11 @@ var f = function(a,b){return a + b;}; //匿名函数 FUNCTION类型
 #### 条件分支
 ```javascript
 if (score > 90) {
-    println("优秀")
+    println("优秀");
 } else if (score > 60) {
-    println("及格") 
+    println("及格"); 
 } else {
-    println("不及格")
+    println("不及格");
 }
 ```
 
@@ -31,7 +31,7 @@ if (score > 90) {
 ```javascript
 // 范围循环
 for (i : range(0, 5,1)) {
-    print(i + " ")  // 输出: 0 1 2 3 4
+    print(i + " ");  // 输出: 0 1 2 3 4
 }
 ```
 **range函数定义：range(start,end,step)，返回的数组范围包含start不包含end**
@@ -40,7 +40,7 @@ for (i : range(0, 5,1)) {
 //条件循环
 var a = 0;
 while(a < 10){
-	a++;
+   a++;
 }
 ```
 
