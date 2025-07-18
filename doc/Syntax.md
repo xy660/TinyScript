@@ -19,7 +19,7 @@ var f = function(a,b){return a + b;}; //匿名函数 FUNCTION类型
 ```javascript
 if (score > 90) {
     println("优秀")
-} elif (score > 60) {
+} else if (score > 60) {
     println("及格") 
 } else {
     println("不及格")
