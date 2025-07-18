@@ -43,7 +43,8 @@ while(a < 10){
 	a++;
 }
 ```
-###3.异常处理
+
+### 3.异常处理
 
 ```javascript
 try{
@@ -53,7 +54,7 @@ try{
 }
 ```
 
-###4.函数定义
+### 4.函数定义
 
 ```javascript
 function funcName(arg1,arg2){
