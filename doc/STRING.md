@@ -10,7 +10,7 @@ println("hello".toArray());
 //输出 ["h","e","l","l","o"]
 ```
 
-##STRING.length()
+## STRING.length()
 
 参数：无参数
 返回值：字符串长度，单位字符
