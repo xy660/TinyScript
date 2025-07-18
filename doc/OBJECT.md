@@ -61,7 +61,7 @@ println(keys);
 ## OBJECT.toPointer()
 
 参数：
-- typeName (STRING): 对象类型名称
+- typeName (STRING): 结构体定义
 
 返回值：指向对象的指针(PTR类型)
 
