@@ -12,9 +12,6 @@ var c = "hello"     // 字符串 STRING类型
 var d = true        // 布尔值 BOOL类型
 var f = function(a,b){return a + b;}; //匿名函数 FUNCTION类型
 
-// 类型强制声明
-num age = 25        // 数值类型
-str name = "Alice"  // 字符串类型
 ```
 
 ### 2. 控制语句
