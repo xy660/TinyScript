@@ -41,8 +41,8 @@ public class Program
             Console.ReadKey();
             return;
         }
-        //Console.WriteLine("TinyScript REPL CLI Version V1.0.0");
-        Console.WriteLine("TinyScript REPL CLI Dev.1.0");
+        Console.WriteLine("TinyScript REPL CLI Version V1.0.0");
+        
         Console.WriteLine();
         while (true)//var a = {name:"hello",shabi:true};
         {
