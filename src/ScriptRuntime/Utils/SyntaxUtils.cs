@@ -54,6 +54,10 @@ public static class SyntaxUtils
                 {
                     sb.Append($"[{ASTParseStream[i].raw}]");
                 }
+                else if (ASTParseStream[i].tokenType == TokenType.CodeBlock)
+                {
+                    sb.Append("{" + ASTParseStream[i].raw + "}");
+                }
                 else
                 {
                     sb.Append(ASTParseStream[i].raw);

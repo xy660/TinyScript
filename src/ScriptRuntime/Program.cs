@@ -56,10 +56,10 @@ public class Program
             Console.ReadKey();
             return;
         }
-        Console.WriteLine("TinyScript REPL CLI Version V1.0.0");
+        Console.WriteLine("TinyScript REPL CLI Version V1.1.0");
 
         Console.WriteLine();
-        while (true)
+        while (true)//var a = {name:"hello",shabi:true};
         {
             Console.Write("TinyScript> ");
             string script = Console.ReadLine();

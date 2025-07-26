@@ -27,6 +27,7 @@ namespace ScriptRuntime.Core
 {
     public class Interpreter
     {
+        public static object GlobalLock = new object();
         public static bool VariableEquals(VariableValue left, VariableValue right)
         {
             // 类型不同立即返回false
@@ -47,10 +48,8 @@ namespace ScriptRuntime.Core
 
                 case ValueType.ARRAY:
                     return object.ReferenceEquals(left.Value, right.Value); // 数组比较引用
-                case ValueType.ANY:
-                    return object.ReferenceEquals(left.Value, right.Value);
                 default:
-                    return false; // 未知类型
+                    return object.ReferenceEquals(left.Value, right.Value);
             }
         }
         public static Dictionary<string, VariableValue> ConstValue = new Dictionary<string, VariableValue>()
@@ -89,22 +88,25 @@ namespace ScriptRuntime.Core
         {
             var retn = FunctionManager.EmptyVariable;
             List<string> backup = new List<string>(localVariable.Keys);
-            //拆解AST
-            //Parser.PrintAST(root);
             //开始执行
-            foreach (var node in root.Childrens)
+            try
             {
-                ExecuteAST(node,localVariable);
-            }
-            
-            //处理执行出来的变量
-            if (clearLocalVar)
-            {
-                foreach (var variable in localVariable.ToList()) //销毁局部变量
+                foreach (var node in root.Childrens)
                 {
-                    if (!backup.Contains(variable.Key))
+                    ExecuteAST(node, localVariable);
+                }
+            }
+            finally
+            {
+                //处理执行出来的变量
+                if (clearLocalVar)
+                {
+                    foreach (var variable in localVariable.ToList()) //销毁局部变量
                     {
-                        localVariable.Remove(variable.Key);
+                        if (!backup.Contains(variable.Key))
+                        {
+                            localVariable.Remove(variable.Key);
+                        }
                     }
                 }
             }
@@ -376,23 +378,29 @@ namespace ScriptRuntime.Core
             if (array.VarType != ValueType.ARRAY)
                 throw new ScriptException("for-each循环表达式结果不为集合");
             localVariable.Add(forEachVar,FunctionManager.EmptyVariable);
-            foreach(var child in (List<VariableValue>)array.Value)
+            try
             {
-                SetVariable(forEachVar,child,localVariable);
-                try
+                foreach (var child in (List<VariableValue>)array.Value)
                 {
-                    ExecuteAST(root.Childrens[2], localVariable);
-                }
-                catch(BreakException ex)
-                {
-                    break;
-                }
-                catch(ContuineException ex)
-                {
-                    continue;
+                    SetVariable(forEachVar, child, localVariable);
+                    try
+                    {
+                        ExecuteAST(root.Childrens[2], localVariable);
+                    }
+                    catch (BreakException ex)
+                    {
+                        break;
+                    }
+                    catch (ContuineException ex)
+                    {
+                        continue;
+                    }
                 }
             }
-            localVariable.Remove(forEachVar);
+            finally
+            {
+                localVariable.Remove(forEachVar);
+            }          
             return FunctionManager.EmptyVariable;
         }
         static VariableValue ExecTryCatchStatement(ASTNode root, Dictionary<string, VariableValue> localVariable)
@@ -408,8 +416,14 @@ namespace ScriptRuntime.Core
                     throw new ScriptException($"变量{root.Childrens[1].Raw}已存在");
                 }
                 localVariable.Add(root.Childrens[1].Raw, new VariableValue(ValueType.STRING, ex.Message));
-                ExecuteAST(root.Childrens[2], localVariable);
-                localVariable.Remove(root.Childrens[1].Raw);
+                try
+                {
+                    ExecuteAST(root.Childrens[2], localVariable);
+                }
+                finally
+                {
+                    localVariable.Remove(root.Childrens[1].Raw);
+                }
             }
             return FunctionManager.EmptyVariable;
         }
@@ -719,11 +733,47 @@ namespace ScriptRuntime.Core
                 }
                 throw new ScriptException($"不存在成员 {root.Childrens[1].Raw}");
             }
+            else if(parent.VarType == ValueType.PROMISE)
+            {
+                if (PromiseManager.PromiseFunctions.ContainsKey(root.Childrens[1].Raw))
+                {
+                    var retn = new VariableValue(ValueType.FUNCTION, PromiseManager.PromiseFunctions[root.Childrens[1].Raw]);
+                    retn.Parent = parent;
+                    return retn;
+                }
+                throw new ScriptException($"不存在成员 {root.Childrens[1].Raw}");
+            }
             else
             {
                 throw new ScriptException($"{AOTEnumMap.ValueTypeString[parent.VarType]}类型无法进行成员访问");
             }
             
+        }
+        static VariableValue ExecAsyncStatement(ASTNode root, Dictionary<string, VariableValue> localVariable)
+        {
+            using (var startEvent = new ManualResetEvent(false))
+            {
+                var task = Task.Run<VariableValue>(() =>
+                {
+                    startEvent.Set(); //通知主线程任务已经启动
+                    var result = ExecuteAST(root.Childrens[0], localVariable);
+                    return result;
+                });
+                if(!startEvent.WaitOne(1000)) //等待任务启动
+                {
+                    throw new ScriptException("错误，异步任务启动超时");
+                }
+                var promise = new VariableValue(ValueType.PROMISE, task);
+                return promise;
+            }
+        }
+        static VariableValue ExecLockStatement(ASTNode root, Dictionary<string, VariableValue> localVariable)
+        {
+            var lockObj = ExecuteAST(root.Childrens[0],localVariable).Value;
+            lock(lockObj)
+            {
+                return ExecuteAST(root.Childrens[1],localVariable);
+            }
         }
         public static VariableValue ExecuteAST(ASTNode root, Dictionary<string, VariableValue> localVariable)
         {
@@ -752,6 +802,8 @@ namespace ScriptRuntime.Core
                 case ASTNode.ASTNodeType.TryCatchStatement:return ExecTryCatchStatement(root,localVariable);
                 case ASTNode.ASTNodeType.Object: return ExecObjectParse(root,localVariable);
                 case ASTNode.ASTNodeType.MemberAccess: return ExecMemberAccess(root,localVariable);
+                case ASTNode.ASTNodeType.AsyncStatement:return ExecAsyncStatement(root,localVariable);
+                case ASTNode.ASTNodeType.LockStatement:return ExecLockStatement(root,localVariable);
             }
             throw new SyntaxException("不支持的ASTNode类型", $"{AOTEnumMap.ASTNodeTypeString[root.NodeType]} {root.Raw}");
         }

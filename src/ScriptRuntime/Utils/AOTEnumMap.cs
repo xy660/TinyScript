@@ -67,6 +67,8 @@ namespace ScriptRuntime.Utils
     {ASTNodeType.StringValue, "StringValue"},
     {ASTNodeType.Object, "Object"},
     {ASTNodeType.KeyValuePair, "KeyValuePair"},
+    {ASTNodeType.AsyncStatement,"AsyncStatement" },
+    {ASTNodeType.LockStatement,"LockStatement" },
 };
         public static Dictionary<FunctionType, string> FunctionEnumString = new Dictionary<FunctionType, string>()
         {

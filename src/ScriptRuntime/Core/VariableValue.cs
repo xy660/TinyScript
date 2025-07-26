@@ -78,5 +78,6 @@ namespace ScriptRuntime.Core
         OBJECT,
         FUNCTION,
         PTR,
+        PROMISE,
     }
 }

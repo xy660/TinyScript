@@ -246,6 +246,33 @@ namespace ScriptRuntime.Core
                 funcAST.Childrens.Add(blockAST);
                 return funcAST;
             }
+            else if(val.raw == "async") //创建异步任务
+            {
+                var func = ProcessLogicStatement();
+                var ast = new ASTNode(ASTNode.ASTNodeType.AsyncStatement, string.Empty);
+                ast.Childrens.Add(func);
+                return ast;
+            }
+            else if(val.raw == "lock") //同步块锁代码
+            {
+                var lockObj = PollToken();
+                var code = PollToken();
+                
+                if(lockObj.tokenType != TokenType.Part || code.tokenType != TokenType.CodeBlock)
+                {
+                    throw new SyntaxException("lock语句语法不正确",ClipTokenString(_pos - 3,ASTParseStream.Count,ASTParseStream));
+                }
+                var lockIdf = BuildASTByTokens(SplitTokens(lockObj.raw)).Childrens[0];
+                if(lockIdf.NodeType != ASTNode.ASTNodeType.Identifier)
+                {
+                    throw new SyntaxException("lock语句锁对象表达式不正确", ClipTokenString(_pos - 3, ASTParseStream.Count, ASTParseStream));
+                }
+                var ast = BuildASTByTokens(SplitTokens(code.raw));
+                var ret = new ASTNode(ASTNode.ASTNodeType.LockStatement, string.Empty);
+                ret.Childrens.Add(lockIdf);
+                ret.Childrens.Add(ast);
+                return ret;
+            }
             else
             {
                 return new ASTNode(ASTNode.ASTNodeType.Identifier, val.raw);
@@ -607,6 +634,8 @@ namespace ScriptRuntime.Core
             StringValue,
             Object,
             KeyValuePair,
+            AsyncStatement,
+            LockStatement,
         }
 
         public ASTNodeType NodeType;
