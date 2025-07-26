@@ -89,6 +89,17 @@ var b = listFile("./your/path"); //遍历文件夹文件 Traversing directory fi
 var c = listDir("./your/path"); //遍历子文件夹 Traversing Subdirectories
 ```
 
+## 5.异步任务 | Async task
+```javascript
+var work = function(){
+    sleep(1000);
+    println("print from async task");
+    return 123;
+}
+var promise = async work();
+println("task result: " + promise.getResult());
+```
+
 --- 
 ## 🚀Get start
 
