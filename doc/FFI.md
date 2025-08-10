@@ -4,7 +4,7 @@
 
 格式：
 ```javascript
-"name1:type1,name2,type2[array_length],name3:type3..."
+"name1:type1,name2:type2[array_length],name3:type3..."
 ```
 支持的类型：
 
