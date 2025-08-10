@@ -35,9 +35,9 @@ lockobj可以是任意对象，任意类型
 ```javascript
 var myLock = "my_lock";
 var a = 0;
-var func = function(lockobj){while(true){lock(lockobj){a++}}};
-var p1 = async func(myLock);
-var p2 = async func(myLock);
+var func = function(lockobj,a){while(true){lock(lockobj){a++}}};
+var p1 = async func(myLock,a);
+var p2 = async func(myLock,a);
 ```
 
 示例代码中任务1和任务2通过lock关键字加锁防止同时访问a出现问题
