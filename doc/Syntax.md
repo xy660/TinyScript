@@ -49,18 +49,33 @@ while(a < 10){
 ```javascript
 try{
    //可能会出错的代码
+   throw("this is a error");
 }catch(ex){
-   println(ex); //捕获到的异常ex为STRING类型
+   println(ex.message);
+   println(ex.stackTrace);
 }
 ```
+**异常对象带有的属性：**
+- .message [STRING]原因描述
+- .stackTrace [STRING]调用堆栈描述
 
 ### 4.函数定义
 
+命名函数（不可做为变量值）
 ```javascript
 function funcName(arg1,arg2){
    //函数代码
    return result;
 }
+```
+匿名函数（可作为变量值）
+```javascript
+var func = function(arg1,arg2){
+   //函数代码
+   return result;
+}
+var a = func; //可以赋值
+a(1,2); //调用
 ```
 如果没有在函数中返回任何值，那么默认返回null
 
@@ -82,3 +97,4 @@ var obj = {
   key3: { test : true }
 }
 ```
+
