@@ -17,6 +17,7 @@ using ScriptRuntime.Runtime;
 using ScriptRuntime.Utils;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Text;
@@ -405,17 +406,33 @@ namespace ScriptRuntime.Core
         }
         static VariableValue ExecTryCatchStatement(ASTNode root, Dictionary<string, VariableValue> localVariable)
         {
+            //保存一下当前的栈大小，便于引发异常后恢复，删掉多出来的
+            var currentStackDepth = TaskContext.ThreadContext[(int)Task.CurrentId].StackTrace.Count;
             try
             {
                 ExecuteAST(root.Childrens[0],localVariable);
             }
-            catch(ScriptException ex)
+            catch(ScriptException ex) 
             {
+                //保存异常栈，然后删掉多余的，恢复到当前位置
+                var stackTrace = StringUtils.GenerateStackTrace(TaskContext.ThreadContext[(int)Task.CurrentId].StackTrace);
+                while (TaskContext.ThreadContext[(int)Task.CurrentId].StackTrace.Count > currentStackDepth)
+                {
+                    TaskContext.ThreadContext[(int)Task.CurrentId].StackTrace.Pop();
+                }
+
                 if (localVariable.ContainsKey(root.Childrens[1].Raw))
                 {
                     throw new ScriptException($"变量{root.Childrens[1].Raw}已存在");
                 }
-                localVariable.Add(root.Childrens[1].Raw, new VariableValue(ValueType.STRING, ex.Message));
+
+                Dictionary<string, VariableValue> container = new Dictionary<string, VariableValue>()
+                {
+                    {"message",new VariableValue(ValueType.STRING,ex.Message)},
+                    {"stackTrace",new VariableValue(ValueType.STRING,stackTrace)}
+                };
+                
+                localVariable.Add(root.Childrens[1].Raw, new VariableValue(ValueType.OBJECT, container));
                 try
                 {
                     ExecuteAST(root.Childrens[2], localVariable);
@@ -457,19 +474,26 @@ namespace ScriptRuntime.Core
                 var ast = root.Childrens[i];
                 args.Add(ExecuteAST(ast, localVariable));
             }
-            if (targetFunctionIdentifier.NodeType == ASTNode.ASTNodeType.Identifier 
-                && FunctionManager.FunctionTable.ContainsKey(targetFunctionIdentifier.Raw))
+            ScriptFunction? targetFunction;
+            VariableValue? thisValue = null;
+            if (targetFunctionIdentifier.NodeType == ASTNode.ASTNodeType.Identifier
+                && FunctionManager.FunctionTable.TryGetValue(targetFunctionIdentifier.Raw, out targetFunction))
             {
-                //如果是直接的标识符就说明是全局函数，直接从全局函数表寻找函数调用
-                return FunctionManager.CallFunction(targetFunctionIdentifier.Raw, args);
+                //弃用这个，改成统一调用入口
+                //return FunctionManager.CallFunction(targetFunctionIdentifier.Raw, args);
+                thisValue = FunctionManager.EmptyVariable; //全局函数没有this
             }
-            var result = ExecuteAST(targetFunctionIdentifier, localVariable);
-            if(result.VarType != ValueType.FUNCTION)
+            else 
             {
-                throw new ScriptException("非函数类型进行函数调用");
+                var result = ExecuteAST(targetFunctionIdentifier, localVariable);
+                if (result.VarType != ValueType.FUNCTION)
+                {
+                    throw new ScriptException("非函数类型进行函数调用");
+                }
+                targetFunction = (ScriptFunction)result.Value;
+                thisValue = result.Parent;
             }
-            ScriptFunction targetFunction = (ScriptFunction)result.Value;
-            var retn = targetFunction.Invoke(args, result.Parent);
+            var retn = targetFunction.Invoke(args, thisValue);
             return retn;
         }
         static VariableValue ExecLeftUnaryOperator(ASTNode root, Dictionary<string, VariableValue> localVariable)
@@ -756,7 +780,10 @@ namespace ScriptRuntime.Core
                 var task = Task.Run<VariableValue>(() =>
                 {
                     startEvent.Set(); //通知主线程任务已经启动
+                    //将当前任务注册到线程上下文
+                    TaskContext.ThreadContext.Add((int)Task.CurrentId, new TaskContext());
                     var result = ExecuteAST(root.Childrens[0], localVariable);
+                    TaskContext.ThreadContext.Remove((int)Task.CurrentId); //任务结束移除
                     return result;
                 });
                 if(!startEvent.WaitOne(1000)) //等待任务启动
@@ -813,5 +840,12 @@ namespace ScriptRuntime.Core
         {
             return ExecCodeBlock(root,localVariable,clearLocalVar);
         }
+    }
+    public class TaskContext
+    {
+        public static Dictionary<int, TaskContext> ThreadContext = new Dictionary<int, TaskContext>();
+
+        public Stack<ScriptFunction> StackTrace = new Stack<ScriptFunction>();
+        
     }
 }

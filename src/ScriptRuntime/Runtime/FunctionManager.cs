@@ -48,7 +48,7 @@ namespace ScriptRuntime.Runtime
             if (FunctionTable.ContainsKey(functionName)) //参数检查，确保匹配
             {
                 var func = FunctionTable[functionName];
-                       
+
                 try
                 {
                     return func.Invoke(args);
@@ -133,7 +133,7 @@ namespace ScriptRuntime.Runtime
         {
             return new ScriptFunction(Name,FunctionArgumentTypes,FunctionArgumentNames,ReturnType,CodeBlock);
         }
-        public VariableValue Invoke(List<VariableValue> args, VariableValue thisValue = null)
+        public VariableValue Invoke(List<VariableValue> args, VariableValue thisValue = null, Dictionary<string, VariableValue> env = null)
         {
             if (FunctionArgumentTypes.Count != args.Count)
             {
@@ -146,13 +146,19 @@ namespace ScriptRuntime.Runtime
                     throw new ScriptException("参数签名不匹配，函数名称：" + this.Name);
                 }
             }
+
+            //记录调用堆栈信息
+            TaskContext.ThreadContext[(int)Task.CurrentId].StackTrace.Push(this);
+
+            VariableValue result = FunctionManager.EmptyVariable;
+
             if (FuncType == FunctionType.System)
             {
-                return SystemFunctionCaller.Invoke(args,thisValue);
+                result = SystemFunctionCaller.Invoke(args, thisValue);
             }
             else if (FuncType == FunctionType.Local)
             {
-                var variables = new Dictionary<string, VariableValue>();
+                var variables = env is null ? new Dictionary<string, VariableValue>() : env;
                 if (thisValue != null) variables.Add("this", thisValue);
                 for (int i = 0; i < FunctionArgumentNames.Count; i++)
                 {
@@ -164,18 +170,21 @@ namespace ScriptRuntime.Runtime
                 }
                 catch (ReturnException ex)
                 {
-                    return ex.ReturnValue;
+                    result = ex.ReturnValue;
                 }
-                return FunctionManager.EmptyVariable; //如果函数内没有return就返回默认空值
+                result = FunctionManager.EmptyVariable; //如果函数内没有return就返回默认空值
             }
             else if (FuncType == FunctionType.Native)
             {
-                return FFIManager.CallNativeFunction(this, args);
+                result = FFIManager.CallNativeFunction(this, args);
             }
             else
             {
                 throw new ScriptException("非法枚举");
             }
+            //弹出当前函数的栈，返回
+            TaskContext.ThreadContext[(int)Task.CurrentId].StackTrace.Pop();
+            return result;
         }
         public ScriptFunction(string name, List<ValueType> functionArgumentTypes, ValueType returnType, Func<List<VariableValue>, VariableValue, VariableValue> systemFunctionCaller)
         {

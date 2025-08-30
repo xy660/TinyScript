@@ -185,7 +185,7 @@ namespace ScriptRuntime.Core
                 throw new SyntaxException("未知解析Token错误", syn);
             }
         }
-        public static List<Token> SplitTokens(string syntax)
+        public static List<Token> SplitTokens(string syntax,uint line = 0)
         {
             syntax = syntax.Replace("\n", string.Empty).Replace("\r", string.Empty);
             TokenType tokenType = TokenType.Part;
@@ -195,6 +195,7 @@ namespace ScriptRuntime.Core
             {
                 (var token, index) = FindNextToken(syntax, index);
                 DbgPrint("token=" + token.raw + "   index=" + index);
+                token.line = line;
                 tokens.Add(token);
             }
             return tokens;
@@ -265,8 +266,8 @@ namespace ScriptRuntime.Core
         //过滤换行注释缩进
         public static string CleanCode(string code)
         {
-            StringBuilder sb = new StringBuilder();
             var rt = code.Replace("\r", string.Empty).Replace("\t", string.Empty);
+            var lines = new StringBuilder();
             foreach (var line in rt.Split('\n'))
             {
                 bool inString = false;
@@ -287,10 +288,10 @@ namespace ScriptRuntime.Core
                         end = i;
                     }
                 }
-                sb.Append(line.Substring(0, end));
-                sb.Append(" "); //加空格拆开语句
+                lines.Append(line.Substring(0, end));
+                lines.Append(" ");
             }
-            return sb.ToString();
+            return lines.ToString();
         }
     }
 
@@ -299,6 +300,7 @@ namespace ScriptRuntime.Core
         public string raw;
         public ASTNode? processedValue;
         public TokenType tokenType;
+        public uint line;
         public Token(string raw, TokenType tokenType)
         {
             this.raw = raw;

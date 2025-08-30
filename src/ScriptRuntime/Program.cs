@@ -32,39 +32,43 @@ public class Program
         if (DEBUG)
             Console.WriteLine("[DEBUG]  " + s);
     }
-    public static void Main(string[] args)
+    public static void RuntimeMain(string[] args)
     {
         Dictionary<string, VariableValue> localVariable = new Dictionary<string, VariableValue>();
 
         SystemFunctions.InitSystemFunction(); //启动后初始化系统函数
+
+        //将当前主线程注册到线程上下文
+        TaskContext.ThreadContext.Add((int)Task.CurrentId, new TaskContext());
 
         if (args.Length > 0) //如果从文件加载
         {
             try
             {
                 string path = args[0];
-                string code = ClearMultiSpace(CleanCode(File.ReadAllText(path)));
-                var ast = BuildASTByTokens(SplitTokens(code));
-                FunctionManager.RegisterFunction("main", new List<string>(), ast);
+                var codeLines = CleanCode(ClearMultiSpace(File.ReadAllText(path)));
+                var ast = BuildASTByTokens(SplitTokens(codeLines));
+                var mainFunc = FunctionManager.RegisterFunction("main", new List<string>(), ast);
                 FunctionManager.CallFunction("main", new List<VariableValue>());
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: {ex.ToString()}");
+                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine("Stack:\r\n" + GenerateStackTrace(TaskContext.ThreadContext[(int)Task.CurrentId].StackTrace));
                 Console.ReadLine();
             }
             Console.ReadKey();
             return;
         }
-        Console.WriteLine("TinyScript REPL CLI Version V1.1.0");
+        Console.WriteLine("TinyScript REPL CLI Version V1.2.0");
 
         Console.WriteLine();
-        while (true)//var a = {name:"hello",shabi:true};
+        while (true)
         {
             Console.Write("TinyScript> ");
             string script = Console.ReadLine();
             try
-            { 
+            {
                 if (script == "\\ast")
                 {
                     while (true)
@@ -88,19 +92,19 @@ public class Program
                 else if (script == "\\vars")
                 {
                     Console.WriteLine("---Variables---");
-                    foreach(var val in localVariable)
+                    foreach (var val in localVariable)
                     {
                         Console.Write($"Name={val.Key}  Value=");
-                        SystemFunctions.PrintLine(new List<VariableValue>() {val.Value},null);
+                        SystemFunctions.PrintLine(new List<VariableValue>() { val.Value }, null);
                     }
                     Console.WriteLine("---Variables End---");
                 }
-                else if(script == "\\envclean")
+                else if (script == "\\envclean")
                 {
                     var cpy = FunctionManager.FunctionTable.ToList();
-                    foreach(var func in cpy)
+                    foreach (var func in cpy)
                     {
-                        if(func.Value.FuncType == FunctionType.Native || func.Value.FuncType == FunctionType.Local)
+                        if (func.Value.FuncType == FunctionType.Native || func.Value.FuncType == FunctionType.Local)
                         {
                             FunctionManager.FunctionTable.Remove(func.Key);
                         }
@@ -108,26 +112,26 @@ public class Program
                     localVariable.Clear();
                     Console.WriteLine("Environment clean now");
                 }
-                else if(script == "\\funcs")
+                else if (script == "\\funcs")
                 {
-                    foreach(var func in FunctionManager.FunctionTable)
+                    foreach (var func in FunctionManager.FunctionTable)
                     {
                         StringBuilder sb = new StringBuilder();
                         sb.Append("(");
-                        for(int i = 0;i < func.Value.FunctionArgumentTypes.Count;i++)
+                        for (int i = 0; i < func.Value.FunctionArgumentTypes.Count; i++)
                         {
                             sb.Append($"[{AOTEnumMap.ValueTypeString[func.Value.FunctionArgumentTypes[i]]}]");
                             sb.Append(func.Value.FuncType == FunctionType.Local ? func.Value.FunctionArgumentNames[i] : $"arg{i + 1}");
-                            if(i != func.Value.FunctionArgumentTypes.Count - 1)
+                            if (i != func.Value.FunctionArgumentTypes.Count - 1)
                             {
                                 sb.Append(',');
                             }
                         }
-                        
+
                         Console.WriteLine($"[{AOTEnumMap.FunctionEnumString[func.Value.FuncType]}] {func.Key}{sb.ToString()})");
                     }
                 }
-                else if(script == "\\help")
+                else if (script == "\\help")
                 {
                     Console.WriteLine("\\ast  进入抽象语法树视图解析模式");
                     Console.WriteLine("\\exit  退出抽象语法树视图解析模式");
@@ -135,7 +139,7 @@ public class Program
                     Console.WriteLine("\\funcs  列出环境中所有可访问的全局函数");
                     Console.WriteLine("\\envclean  清理环境所有变量和Local/Native函数");
                 }
-                else 
+                else
                 {
                     Interpreter.ExecuteBlock(BuildASTByTokens(SplitTokens(script)), localVariable, false);
                 }
@@ -158,6 +162,13 @@ public class Program
                 Console.WriteLine("系统错误：" + ex.Message);
             }
         }
+    }
+    public static void Main(string[] args)
+    {
+        Task.Run(() =>
+        {
+            RuntimeMain(args);
+        }).Wait();
 
     }
 }

@@ -41,6 +41,8 @@ namespace ScriptRuntime.Runtime
                 new List<ValueType>() { }, ValueType.STRING, ReadLine));
             FunctionTable.Add("clear", new ScriptFunction("clear",
                 new List<ValueType>() { }, ValueType.NULL, Clear));
+            FunctionTable.Add("throw", new ScriptFunction("throw",
+                new List<ValueType>() { ValueType.STRING}, ValueType.NULL, ThrowError));
 
             //休眠
             FunctionTable.Add("sleep", new ScriptFunction("sleep", new List<ValueType>() { ValueType.NUM }, ValueType.NULL, Sleep));
@@ -191,6 +193,10 @@ namespace ScriptRuntime.Runtime
         {
             Console.Clear();
             return EmptyVariable;
+        }
+        public static VariableValue ThrowError(List<VariableValue> args, VariableValue thisValue)
+        {
+            throw new ScriptException((string)args[0].Value);
         }
         public static VariableValue ReadLine(List<VariableValue> args, VariableValue thisValue)
         {

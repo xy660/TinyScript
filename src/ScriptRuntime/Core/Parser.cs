@@ -641,6 +641,7 @@ namespace ScriptRuntime.Core
         public ASTNodeType NodeType;
         public string Raw;
         public List<ASTNode> Childrens;
+        public uint line;
 
         public ASTNode(ASTNodeType nodeType, string raw)
         {

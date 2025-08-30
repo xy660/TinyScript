@@ -70,6 +70,7 @@ namespace ScriptRuntime.Core
     public enum ValueType
     {
         NULL,
+        CONTEXT,
         ANY,
         NUM,
         STRING,

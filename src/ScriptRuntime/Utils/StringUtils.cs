@@ -15,11 +15,13 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ScriptRuntime.Core;
 using ScriptRuntime.Runtime;
+using ScriptRuntime.Utils;
 
 static class StringUtils
 {
@@ -110,6 +112,27 @@ static class StringUtils
             }
         }
         return string.Empty;
+    }
+    public static string GenerateStackTrace(Stack<ScriptFunction> stack)
+    {
+        var result = new StringBuilder();
+        foreach (var func in stack)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("(");
+            for (int i = 0; i < func.FunctionArgumentTypes.Count; i++)
+            {
+                sb.Append($"[{AOTEnumMap.ValueTypeString[func.FunctionArgumentTypes[i]]}]");
+                sb.Append(func.FuncType == FunctionType.Local ? func.FunctionArgumentNames[i] : $"arg{i + 1}");
+                if (i != func.FunctionArgumentTypes.Count - 1)
+                {
+                    sb.Append(',');
+                }
+            }
+
+            result.AppendLine($"at {func.Name}{sb.ToString()})");
+        }
+        return result.ToString();
     }
     public static string ClearMultiSpace(string s)
     {
