@@ -172,7 +172,6 @@ namespace ScriptRuntime.Runtime
                 {
                     result = ex.ReturnValue;
                 }
-                result = FunctionManager.EmptyVariable; //如果函数内没有return就返回默认空值
             }
             else if (FuncType == FunctionType.Native)
             {
