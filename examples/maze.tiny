@@ -1,0 +1,92 @@
+function generateBorder(map)
+{
+    var height = map.length();
+    var width = map[0].length();
+    for (y : range(0, height,1)) {
+        map[y][0] = "##";            // 左边界
+        map[y][width - 1] = "##";    // 右边界
+    }
+    
+    // 填充横向边界（上下两侧）
+    for (x : range(0, width,1)) {
+        map[0][x] = "##";            // 上边界
+        map[height - 1][x] = "##";   // 下边界
+    }
+    map[0][1] = ".."; //入口
+    map[height - 1][width - 2] = ".."; //出口
+}
+function generateMaze(map, x, y, width, height) {
+    // 终止条件：区域太小无法分割
+    if (width < 3 || height < 3) return null;
+
+    var splitX = x + 1 + 2 * random(0, (width - 3) / 2); 
+    var splitY = y + 1 + 2 * random(0, (height - 3) / 2);
+
+
+    // 绘制十字墙
+    for (i : range(x, x + width, 1)) map[splitY][i] = "##";
+    for (i : range(y, y + height, 1)) map[i][splitX] = "##";
+
+    // 随机开四个方向的洞（至少打通三个）
+    var holes = [
+        [splitX, random(y, splitY)],              // 上区域
+        [splitX, random(splitY + 1, y + height)], // 下区域
+        [random(x, splitX), splitY],              // 左区域
+        [random(splitX + 1, x + width), splitY]  // 右区域
+    ];
+
+    // 随机选择三个洞打通
+    for (i : range(0, 3, 1)) {
+        var hole = holes[random(0, holes.length())];
+        map[hole[1]][hole[0]] = "..";
+        holes.remove(find(holes, hole));  // 避免重复
+    }
+
+    // 递归处理四个子区域
+    generateMaze(map, x, y, splitX - x, splitY - y);               // 左上
+    generateMaze(map, splitX + 1, y, width - (splitX - x + 1), splitY - y);  // 右上
+    generateMaze(map, x, splitY + 1, splitX - x, height - (splitY - y + 1)); // 左下
+    generateMaze(map, splitX + 1, splitY + 1, width - (splitX - x + 1), height - (splitY - y + 1)); // 右下
+}
+
+// 辅助函数：查找元素在数组中的索引
+function find(arr, item) {
+    for (i : range(0, arr.length(), 1)) {
+        if (arr[i][0] == item[0] && arr[i][1] == item[1]) return i;
+    }
+    return -1;
+}
+function draw(map)
+{
+    var height = map.length();
+    var width = map[0].length();
+    for(y:range(0,height,1))
+    {
+        for(x:range(0,width,1))
+        {
+            print(map[y][x]);
+        }
+        println("");
+    }
+}
+function initMap(width,height)
+{
+    var ret = [];
+    for(i:range(0,height,1))
+    {
+        var row = [];
+        for(j:range(0,width,1))
+        {
+            row.add("..");
+        }
+        ret.add(row);
+    }
+    return ret;
+}
+
+print("TinyScript迷宫生成器\r\n请输入迷宫大小：");
+var mapSize = num(readln());
+var map = initMap(mapSize,mapSize);
+generateBorder(map);
+generateMaze(map,1,1,mapSize - 2,mapSize - 2);
+draw(map);

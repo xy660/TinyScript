@@ -1,0 +1,4 @@
+ffiload("libc.so.6", "system", "string", "int");
+system("whoami");
+println("---------------");
+println("execute \"whoami\" command success");
