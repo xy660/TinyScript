@@ -60,7 +60,7 @@ public class Program
             Console.ReadKey();
             return;
         }
-        Console.WriteLine("TinyScript REPL CLI Version V1.2.0");
+        Console.WriteLine("TinyScript REPL CLI Version V1.2.1");
 
         Console.WriteLine();
         while (true)
@@ -141,6 +141,8 @@ public class Program
                 }
                 else
                 {
+                    TaskContext.ThreadContext[(int)Task.CurrentId].StackTrace.Clear(); //执行前清除之前的堆栈
+
                     Interpreter.ExecuteBlock(BuildASTByTokens(SplitTokens(script)), localVariable, false);
                 }
             }
