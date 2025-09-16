@@ -1,10 +1,12 @@
 # TinyScript
 
-🚀 **一个轻量级脚本语言** | **A lightweigtht scripting language**  
+ **一个轻量级脚本语言** | **A lightweigtht scripting language**  
+
+可作为脚本引擎嵌入您的C#程序或作为脚本引擎编写例子
 
 ---
 
-## ✨ 特性 | Features  
+## 特性 | Features  
 
 ✅ Lightweight syntax / 轻量级语法 
 
@@ -18,7 +20,7 @@
 
 ---
 
-## 📖 快速示例 | Quick Examples  
+## 快速示例 | Quick Examples  
 
 ### 1. FFI互操作 | FFI interop
 ```javascript
@@ -89,7 +91,7 @@ var b = listFile("./your/path"); //遍历文件夹文件 Traversing directory fi
 var c = listDir("./your/path"); //遍历子文件夹 Traversing Subdirectories
 ```
 
-## 5.异步任务 | Async task
+### 5.异步任务 | Async task
 ```javascript
 var work = function(){
     sleep(1000);
@@ -101,7 +103,7 @@ println("task result: " + promise.getResult());
 ```
 
 --- 
-## 🚀Get start
+## Get start
 
  1. 运行脚本文件 | Run script from file
 ```bash
@@ -120,7 +122,9 @@ TinyScript>
 
 ---
 
-## 更多系统函数可以在src/ScriptRuntime/Runtime/SystemFunctions.cs中修改，添加
+# 如何在脚本引擎中增加自己的内置函数：
+
+## 在src/ScriptRuntime/Runtime/SystemFunctions.cs：
 
 **Example：**
 
