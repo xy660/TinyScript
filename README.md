@@ -8,9 +8,9 @@
 
 ## 特性 | Features  
 
-✅ Lightweight syntax / 轻量级语法 
-
 ✅ ​​Object-Oriented / 面向对象
+
+✅ Native interop / 便捷原生互操作
 
 ✅ Easy embedding in applications / 易于嵌入应用程序  
 
@@ -26,6 +26,16 @@
 ```javascript
 var beep = ffiload("kernel32.dll","Beep","int,int","int");
 beep(2000,1000);
+
+//动态函数桩创建
+var pFunc = createCallback({
+    func:function(a,b){
+        return a+b;
+    },
+    argTypes:"uint,uint",
+    retTypes:"uint",
+    abi:"cdecl" //32位系统可选，64位系统不需要指定，自动按照系统默认调用约定
+})
 
 ```
 
