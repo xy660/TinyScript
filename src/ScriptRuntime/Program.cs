@@ -32,14 +32,14 @@ public class Program
         if (DEBUG)
             Console.WriteLine("[DEBUG]  " + s);
     }
-    public static void RuntimeMain(string[] args)
+    public static void REPLMain(string[] args)
     {
         Dictionary<string, VariableValue> localVariable = new Dictionary<string, VariableValue>();
 
         SystemFunctions.InitSystemFunction(); //启动后初始化系统函数
 
         //将当前主线程注册到线程上下文
-        TaskContext.ThreadContext.Add((int)Task.CurrentId, new TaskContext());
+        TaskContext.ThreadContext.Add(TaskContext.GetCurrentThreadId(), new TaskContext());
 
         if (args.Length > 0) //如果从文件加载
         {
@@ -54,7 +54,7 @@ public class Program
             catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
-                Console.WriteLine("Stack:\r\n" + GenerateStackTrace(TaskContext.ThreadContext[(int)Task.CurrentId].StackTrace));
+                Console.WriteLine("Stack:\r\n" + GenerateStackTrace(TaskContext.ThreadContext[TaskContext.GetCurrentThreadId()].StackTrace));
                 Console.ReadLine();
             }
             Console.ReadKey();
@@ -141,7 +141,7 @@ public class Program
                 }
                 else
                 {
-                    TaskContext.ThreadContext[(int)Task.CurrentId].StackTrace.Clear(); //执行前清除之前的堆栈
+                    TaskContext.ThreadContext[TaskContext.GetCurrentThreadId()].StackTrace.Clear(); //执行前清除之前的堆栈
 
                     Interpreter.ExecuteBlock(BuildASTByTokens(SplitTokens(script)), localVariable, false);
                 }
@@ -162,15 +162,13 @@ public class Program
             catch (Exception ex)
             {
                 Console.WriteLine("系统错误：" + ex.Message);
+                throw;
             }
         }
     }
     public static void Main(string[] args)
     {
-        Task.Run(() =>
-        {
-            RuntimeMain(args);
-        }).Wait();
+        REPLMain(args);
 
     }
 }

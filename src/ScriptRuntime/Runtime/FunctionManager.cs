@@ -23,7 +23,7 @@ namespace ScriptRuntime.Runtime
     public static class FunctionManager
     {
         
-        public static readonly VariableValue EmptyVariable = new VariableValue(ValueType.NULL, null) {ReadOnly = true };
+        public static readonly VariableValue EmptyVariable = new VariableValue(ValueType.NULL, "null") {ReadOnly = true };
         public static Dictionary<string, ScriptFunction> FunctionTable = new Dictionary<string, ScriptFunction>();
 
         //参数格式：funcName(args...){...}
@@ -148,7 +148,7 @@ namespace ScriptRuntime.Runtime
             }
 
             //记录调用堆栈信息
-            TaskContext.ThreadContext[(int)Task.CurrentId].StackTrace.Push(this);
+            TaskContext.ThreadContext[TaskContext.GetCurrentThreadId()].StackTrace.Push(this);
 
             VariableValue result = FunctionManager.EmptyVariable;
 
@@ -182,7 +182,7 @@ namespace ScriptRuntime.Runtime
                 throw new ScriptException("非法枚举");
             }
             //弹出当前函数的栈，返回
-            TaskContext.ThreadContext[(int)Task.CurrentId].StackTrace.Pop();
+            TaskContext.ThreadContext[TaskContext.GetCurrentThreadId()].StackTrace.Pop();
             return result;
         }
         public ScriptFunction(string name, List<ValueType> functionArgumentTypes, ValueType returnType, Func<List<VariableValue>, VariableValue, VariableValue> systemFunctionCaller)

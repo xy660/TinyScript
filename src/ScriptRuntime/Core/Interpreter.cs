@@ -30,7 +30,7 @@ namespace ScriptRuntime.Core
     public class Interpreter
     {
 
-        public static string VersionString = "3.1.0";
+        public static string VersionString = "3.1.1";
 
         public static object GlobalLock = new object();
         public static bool VariableEquals(VariableValue left, VariableValue right)
@@ -72,6 +72,10 @@ namespace ScriptRuntime.Core
             else if (localVariable.ContainsKey(name))
             {
                 return localVariable[name];
+            }
+            else if(FunctionManager.FunctionTable.ContainsKey(name))
+            {
+                return new VariableValue(ValueType.FUNCTION, FunctionManager.FunctionTable[name]);
             }
             else
             {
@@ -411,7 +415,7 @@ namespace ScriptRuntime.Core
         static VariableValue ExecTryCatchStatement(ASTNode root, Dictionary<string, VariableValue> localVariable)
         {
             //保存一下当前的栈大小，便于引发异常后恢复，删掉多出来的
-            var currentStackDepth = TaskContext.ThreadContext[(int)Task.CurrentId].StackTrace.Count;
+            var currentStackDepth = TaskContext.ThreadContext[TaskContext.GetCurrentThreadId()].StackTrace.Count;
             try
             {
                 ExecuteAST(root.Childrens[0],localVariable);
@@ -419,10 +423,10 @@ namespace ScriptRuntime.Core
             catch(ScriptException ex) 
             {
                 //保存异常栈，然后删掉多余的，恢复到当前位置
-                var stackTrace = StringUtils.GenerateStackTrace(TaskContext.ThreadContext[(int)Task.CurrentId].StackTrace);
-                while (TaskContext.ThreadContext[(int)Task.CurrentId].StackTrace.Count > currentStackDepth)
+                var stackTrace = StringUtils.GenerateStackTrace(TaskContext.ThreadContext[TaskContext.GetCurrentThreadId()].StackTrace);
+                while (TaskContext.ThreadContext[TaskContext.GetCurrentThreadId()].StackTrace.Count > currentStackDepth)
                 {
-                    TaskContext.ThreadContext[(int)Task.CurrentId].StackTrace.Pop();
+                    TaskContext.ThreadContext[TaskContext.GetCurrentThreadId()].StackTrace.Pop();
                 }
 
                 if (localVariable.ContainsKey(root.Childrens[1].Raw))
@@ -781,20 +785,24 @@ namespace ScriptRuntime.Core
         {
             using (var startEvent = new ManualResetEvent(false))
             {
-                var task = Task.Run<VariableValue>(() =>
+                var context = new TaskContext();
+                var t = new Thread(() =>
                 {
-                    startEvent.Set(); //通知主线程任务已经启动
-                    //将当前任务注册到线程上下文
-                    TaskContext.ThreadContext.Add((int)Task.CurrentId, new TaskContext());
+                    startEvent.Set();
+                    context.IsRunning = true;
+                    TaskContext.ThreadContext.Add(TaskContext.GetCurrentThreadId(), context);
                     var result = ExecuteAST(root.Childrens[0], localVariable);
-                    TaskContext.ThreadContext.Remove((int)Task.CurrentId); //任务结束移除
-                    return result;
+                    TaskContext.ThreadContext[TaskContext.GetCurrentThreadId()].Result = result;
+                    context.IsRunning = false;
+                    TaskContext.ThreadContext.Remove(TaskContext.GetCurrentThreadId()); //任务结束移除
                 });
+                t.Start();
+                context.thread = t;
                 if(!startEvent.WaitOne(1000)) //等待任务启动
                 {
                     throw new ScriptException("错误，异步任务启动超时");
                 }
-                var promise = new VariableValue(ValueType.PROMISE, task);
+                var promise = new VariableValue(ValueType.PROMISE, context);
                 return promise;
             }
         }
@@ -847,9 +855,20 @@ namespace ScriptRuntime.Core
     }
     public class TaskContext
     {
-        public static Dictionary<int, TaskContext> ThreadContext = new Dictionary<int, TaskContext>();
+        public static ulong GetCurrentThreadId()
+        {
+            return NativeThread.GetCurrentNativeThreadId();
+        }
+
+        public static Dictionary<ulong, TaskContext> ThreadContext = new Dictionary<ulong, TaskContext>();
 
         public Stack<ScriptFunction> StackTrace = new Stack<ScriptFunction>();
+
+        public VariableValue Result = FunctionManager.EmptyVariable;
+
+        public Thread thread;
+
+        public bool IsRunning = false;
         
     }
 }

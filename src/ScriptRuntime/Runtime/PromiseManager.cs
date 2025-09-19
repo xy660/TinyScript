@@ -42,10 +42,10 @@ namespace ScriptRuntime.Runtime
         //等待，等待成功就返回true，超时返回false
         public static VariableValue WaitTimeout(List<VariableValue> args, VariableValue thisValue)
         {
-            var task = (Task<VariableValue>)thisValue.Value;
+            var task = (TaskContext)thisValue.Value;
             try
             {
-                var res = task.Wait((int)(double)args[0].Value);
+                var res = task.thread.Join((int)(double)args[0].Value);
                 return new VariableValue(Core.ValueType.BOOL, res);
             }
             catch
@@ -57,10 +57,10 @@ namespace ScriptRuntime.Runtime
         //无限等待任务，返回值为结果
         public static VariableValue WaitTask(List<VariableValue> args, VariableValue thisValue)
         {
-            var task = (Task<VariableValue>)thisValue.Value;
+            var task = (TaskContext)thisValue.Value;
             try
             {
-                task.Wait();
+                task.thread.Join();
                 return task.Result;
             }
             catch
@@ -70,12 +70,12 @@ namespace ScriptRuntime.Runtime
         }
         public static VariableValue IsCompleted(List<VariableValue> args, VariableValue thisValue)
         {
-            var task = (Task<VariableValue>)thisValue.Value;
-            return new VariableValue(Core.ValueType.BOOL, task.Status == TaskStatus.Running);
+            var task = (TaskContext)thisValue.Value;
+            return new VariableValue(Core.ValueType.BOOL, task.IsRunning);
         }
         public static VariableValue GetResult(List<VariableValue> args, VariableValue thisValue)
         {
-            var task = (Task<VariableValue>)thisValue.Value;
+            var task = (TaskContext)thisValue.Value;
             return task.Result;
         }
     }
