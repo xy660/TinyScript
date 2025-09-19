@@ -55,7 +55,7 @@ pop ecx  ;保存返回地址
 _clean_start: ;开始清理栈
 cmp edx,0
 je near _clean_end
-pop edx ;循环弹出dword
+add esp,4 ;循环弹出dword
 sub edx,1 ;i--
 jmp _clean_start
 
