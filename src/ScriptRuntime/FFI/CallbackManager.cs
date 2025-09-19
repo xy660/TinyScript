@@ -64,11 +64,6 @@ namespace ScriptRuntime.FFI
             return ret;
         }
 
-        [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
-        public unsafe static nint CallbackEntryStdcall(int funcId, nint* args)
-        {
-            return CallbackEntry(funcId,args);
-        }
         [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
         public unsafe static nint CallbackEntryCdecl(int funcId, nint* args)
         {
@@ -98,7 +93,7 @@ namespace ScriptRuntime.FFI
             var immabi = ABIMapper[abi];
             nint pTarget = 0;
 
-            if (immabi == TrampolineCode.ABI.Stdcall) pTarget = (nint)(delegate* unmanaged[Stdcall]<int, nint*, nint>)&CallbackEntryStdcall;
+            if (immabi == TrampolineCode.ABI.Stdcall) pTarget = (nint)(delegate* unmanaged[Cdecl]<int, nint*, nint>)&CallbackEntryCdecl;
             else if(immabi == TrampolineCode.ABI.Cdecl) pTarget = (nint)(delegate* unmanaged[Cdecl]<int, nint*, nint>)&CallbackEntryCdecl;
             else pTarget = (nint)(delegate* unmanaged<int, nint*, nint>)&CallbackEntryDefault;
 
