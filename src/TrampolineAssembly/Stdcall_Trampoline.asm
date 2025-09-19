@@ -45,7 +45,7 @@ call eax ;调用处理函数，清理返回（目标函数cdecl）
 pop edx
 pop ecx
 
-mov eax,edi ;转移到易失性寄存器
+mov edx,edi ;转移到易失性寄存器
 
 pop edi
 pop esi
@@ -53,10 +53,10 @@ pop ebx ;恢复非易失性寄存器
 
 pop ecx  ;保存返回地址
 _clean_start: ;开始清理栈
-cmp eax,0
+cmp edx,0
 je near _clean_end
 pop edx ;循环弹出dword
-sub eax,1 ;i--
+sub edx,1 ;i--
 jmp _clean_start
 
 _clean_end:
