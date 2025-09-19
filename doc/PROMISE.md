@@ -11,7 +11,7 @@
 var p = async sin(PI);
 println(p.getResult());
 ```
- * **如果任务还在运行中，则会阻塞直到任务返回**
+ * **如果任务还在运行中，则会返回NULL**
 
 ## PROMISE.isRunning()
 
