@@ -162,7 +162,6 @@ public class Program
             catch (Exception ex)
             {
                 Console.WriteLine("系统错误：" + ex.Message);
-                throw;
             }
         }
     }
@@ -172,3 +171,4 @@ public class Program
 
     }
 }
+
