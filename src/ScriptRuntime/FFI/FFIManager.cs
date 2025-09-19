@@ -169,21 +169,8 @@ namespace ScriptRuntime.FFI
                     }
                     else if(retTypeNative == "ptr")
                     {
-                        //直接指针拷贝数据到double避免转换丢失精度
+                        //直接指针拷贝数据
                         return new VariableValue(ValueType.PTR, ret);
-                        /*
-                        unsafe
-                        {
-                            double doubleRet = 0;
-                            byte* pPtr = (byte*)&ret;
-                            byte* pDouble = (byte*)&doubleRet;
-                            for(int i = 0;i < nint.Size;i++)
-                            {
-                                pDouble[i] = (byte)doubleRet;
-                            }
-                            return new VariableValue(ValueType.NUM, doubleRet);
-                        }
-                        */
                     }
                     else //剩下就是整数了
                     {
@@ -394,7 +381,35 @@ namespace ScriptRuntime.FFI
             return (nativeType, false, 0);
         }
 
-        private static unsafe void WriteValueToMemory(byte* ptr, string type, VariableValue value)
+        public static VariableValue Native2ScriptVariable(nint ret, string retTypeNative)
+        {
+
+            if (retTypeNative == "string")
+            {
+                string s = Marshal.PtrToStringAuto(ret);
+                if (s is null) s = "null_string";
+                return new VariableValue(ValueType.STRING, s);
+            }
+            else if (retTypeNative == "bool")
+            {
+                return new VariableValue(ValueType.BOOL, ret != 0);
+            }
+            else if (retTypeNative == "float" || retTypeNative == "double")
+            {
+                return new VariableValue(ValueType.NUM, BitConverter.Int64BitsToDouble(ret));
+            }
+            else if (retTypeNative == "ptr")
+            {
+                //直接指针拷贝数据
+                return new VariableValue(ValueType.PTR, ret);
+            }
+            else //剩下就是整数了
+            {
+                return new VariableValue(ValueType.NUM, (double)ret);
+            }
+        }
+
+        public static unsafe void WriteValueToMemory(void* ptr, string type, VariableValue value)
         {
             switch (type)
             {

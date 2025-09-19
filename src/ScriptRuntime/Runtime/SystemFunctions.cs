@@ -119,6 +119,22 @@ namespace ScriptRuntime.Runtime
                 new List<ValueType>() { ValueType.PTR},
                 ValueType.NULL,
                 FreePtr));
+            FunctionTable.Add("createCallback", new ScriptFunction("nativeCallback",
+                new List<ValueType>() { ValueType.OBJECT },
+                ValueType.PTR,
+                RegisterCallback));
+            FunctionTable.Add("is64bit", new ScriptFunction("is64bit",
+                new List<ValueType>(),
+                ValueType.BOOL,
+                Is64Bit));
+            FunctionTable.Add("OSName", new ScriptFunction("OSName",
+                new List<ValueType>(),
+                ValueType.STRING,
+                GetOSName));
+            FunctionTable.Add("runtimeVersion", new ScriptFunction("runtimeVersion",
+                new List<ValueType>(),
+                ValueType.STRING,
+                GetRuntimeVersion));
         }
 
         public static VariableValue Eval(List<VariableValue> args, VariableValue thisValue)
@@ -331,11 +347,25 @@ namespace ScriptRuntime.Runtime
         #endregion
 
         #region 字符串操作类
-        
+
         #endregion
 
         #region FFI相关
         //ffiload(libName,funcName,argDefine,retDefine)
+        public static VariableValue Is64Bit(List<VariableValue> args, VariableValue thisValue)
+        {
+            return new VariableValue(ValueType.BOOL, Environment.Is64BitProcess);
+        }
+        public static VariableValue GetOSName(List<VariableValue> args, VariableValue thisValue)
+        {
+            return new VariableValue(ValueType.STRING, Environment.OSVersion.VersionString);
+        }
+        public static VariableValue GetRuntimeVersion(List<VariableValue> args, VariableValue thisValue)
+        {
+            return new VariableValue(ValueType.STRING, Interpreter.VersionString);
+        }
+
+
         public static VariableValue FFILoadFunction(List<VariableValue> args, VariableValue thisValue)
         {
             string libName = (string)args[0].Value;
@@ -355,8 +385,50 @@ namespace ScriptRuntime.Runtime
         
         static unsafe VariableValue FreePtr(List<VariableValue> args, VariableValue thisValue)
         {
-            Marshal.FreeHGlobal((nint)args[0].Value);
+            if (CallbackManager.Ptr2Callback.ContainsKey((nint)args[0].Value))
+            {
+                CallbackManager.UnregisterCallback((nint)args[0].Value);
+            }
+            else
+            {
+                Marshal.FreeHGlobal((nint)args[0].Value);
+            }
             return FunctionManager.EmptyVariable;
+
+        }
+
+        //返回函数指针
+        static unsafe VariableValue RegisterCallback(List<VariableValue> args, VariableValue thisValue)
+        {
+            var objContainer = (Dictionary<string, VariableValue>)args[0].Value;
+
+            if(!objContainer.TryGetValue("func",out var targetFunction))
+            {
+                throw new ScriptException("参数对象不包含 func");
+            }
+            string abi = string.Empty;
+            if(!objContainer.TryGetValue("abi",out var tmp_abi))
+            {
+                abi = string.Empty;
+            }
+            else
+            {
+                abi = (string)tmp_abi.Value;
+            }
+
+            if(!objContainer.TryGetValue("argTypes",out var argTypes))
+            {
+                throw new ScriptException("参数对象不包含 argTypes");
+            }
+
+            if (!objContainer.TryGetValue("retType", out var retTypes))
+            {
+                throw new ScriptException("参数对象不包含 retType");
+            }
+
+            var info = CallbackManager.RegisterCallback((ScriptFunction)targetFunction.Value, abi,
+                (string)argTypes.Value, (string)retTypes.Value);
+            return new VariableValue(ValueType.PTR, info.addr);
         }
 
         #endregion

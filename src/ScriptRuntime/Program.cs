@@ -60,7 +60,7 @@ public class Program
             Console.ReadKey();
             return;
         }
-        Console.WriteLine("TinyScript REPL CLI Version V1.2.1");
+        Console.WriteLine("TinyScript REPL CLI Version V" + Interpreter.VersionString);
 
         Console.WriteLine();
         while (true)

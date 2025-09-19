@@ -39,7 +39,26 @@ namespace ScriptRuntime.Runtime
             {"asObject",new ScriptFunction("asObject",
                     new List<ValueType>(){ValueType.STRING},
                     ValueType.STRING,PtrToObject) },
+            {"move",new ScriptFunction("move",
+                    new List<ValueType>(){ValueType.NUM},
+                    ValueType.PTR,PtrMove) },
+            {"copy",new ScriptFunction("copy",
+                    new List<ValueType>(),
+                    ValueType.PTR,PtrCopy) },
         };
+
+        static unsafe VariableValue PtrCopy(List<VariableValue> args, VariableValue thisValue)
+        {
+            nint dest = 0;
+            var p = &dest;
+            *p = (nint)thisValue.Value;
+            return new VariableValue(ValueType.PTR,dest);
+        }
+        static VariableValue PtrMove(List<VariableValue> args, VariableValue thisValue)
+        {
+            thisValue.Value = (nint)thisValue.Value + (int)(double)args[0].Value;
+            return thisValue;
+        }
         static VariableValue PtrToObject(List<VariableValue> args, VariableValue thisValue)
         {
             var objContainer = FFIManager.PtrToObject((nint)thisValue.Value, (string)args[0].Value); 
