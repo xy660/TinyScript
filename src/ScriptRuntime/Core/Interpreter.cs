@@ -30,7 +30,7 @@ namespace ScriptRuntime.Core
     public class Interpreter
     {
 
-        public static string VersionString = "3.1.1";
+        public static string VersionString = "3.2.0";
 
         public static object GlobalLock = new object();
         public static bool VariableEquals(VariableValue left, VariableValue right)
@@ -501,8 +501,20 @@ namespace ScriptRuntime.Core
                 targetFunction = (ScriptFunction)result.Value;
                 thisValue = result.Parent;
             }
-            var retn = targetFunction.Invoke(args, thisValue);
-            return retn;
+            try
+            {
+                var retn = targetFunction.Invoke(args, thisValue);
+                return retn;
+            }
+            catch (Exception ex)
+            {
+#if DEBUG
+                throw;
+#else
+                throw new ScriptException(ex.Message); //转换系统异常到脚本异常
+#endif
+            }
+            
         }
         static VariableValue ExecLeftUnaryOperator(ASTNode root, Dictionary<string, VariableValue> localVariable)
         {

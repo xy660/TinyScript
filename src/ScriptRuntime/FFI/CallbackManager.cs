@@ -54,11 +54,22 @@ namespace ScriptRuntime.FFI
         {
             CallbackInfo info = Callbacks[funcId];
             List<VariableValue> scriptVariables = new List<VariableValue>();
-            for(int i = 0;i < info.argc;i++)
+            for (int i = 0; i < info.argc; i++)
             {
                 scriptVariables.Add(FFIManager.Native2ScriptVariable(args[i], info.nativeArgDef[i]));
             }
-            var result = info.targetFunc.Invoke(scriptVariables);
+            bool forginThread = !TaskContext.ThreadContext.ContainsKey(TaskContext.GetCurrentThreadId());
+            if (forginThread) //对非脚本引擎线程进行特殊处理，注册到上下文
+            {
+                TaskContext.ThreadContext.Add(TaskContext.GetCurrentThreadId(), new TaskContext());
+            }
+
+            VariableValue result = info.targetFunc.Invoke(scriptVariables);
+
+            if (forginThread)
+            {
+                TaskContext.ThreadContext.Remove(TaskContext.GetCurrentThreadId());
+            }
             nint ret = 0;
             FFIManager.WriteValueToMemory(&ret, info.nativeRetDef, result);
             return ret;

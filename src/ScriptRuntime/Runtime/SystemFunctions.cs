@@ -81,7 +81,7 @@ namespace ScriptRuntime.Runtime
 
             // 类型转换
             FunctionTable.Add("num", new ScriptFunction("num",
-                new List<ValueType>() { ValueType.STRING }, ValueType.NUM, ToNum));
+                new List<ValueType>() { ValueType.ANY }, ValueType.NUM, ToNum));
             FunctionTable.Add("str", new ScriptFunction("str",
                 new List<ValueType>() { ValueType.NUM }, ValueType.STRING, ToStr));
 
@@ -135,6 +135,14 @@ namespace ScriptRuntime.Runtime
                 new List<ValueType>(),
                 ValueType.STRING,
                 GetRuntimeVersion));
+            FunctionTable.Add("loadFunc", new ScriptFunction("loadFunc",
+                new List<ValueType>() { ValueType.PTR, ValueType.STRING, ValueType.STRING },
+                ValueType.FUNCTION,
+                FFIFunctionFromPtr));
+            FunctionTable.Add("ptr", new ScriptFunction("ptr",
+                new List<ValueType>() { ValueType.STRING },
+                ValueType.PTR,
+                CreatePTR));
         }
 
         public static VariableValue Eval(List<VariableValue> args, VariableValue thisValue)
@@ -160,7 +168,21 @@ namespace ScriptRuntime.Runtime
         #endregion
 
         #region Type Conversion
-        public static VariableValue ToNum(List<VariableValue> args, VariableValue thisValue) => new(ValueType.NUM, double.Parse((string)args[0].Value));
+        public static VariableValue ToNum(List<VariableValue> args, VariableValue thisValue)
+        {
+            if (args[0].VarType == ValueType.STRING)
+            {
+                return new(ValueType.NUM, double.Parse((string)args[0].Value));
+            }
+            else if (args[0].VarType == ValueType.PTR)
+            {
+                return new(ValueType.NUM, (nint)(double)args[0].Value);
+            }
+            else
+            {
+                throw new ScriptException($"无法将[{AOTEnumMap.ValueTypeString[args[0].VarType]}]转换为NUM");
+            }
+        }
         public static VariableValue ToStr(List<VariableValue> args, VariableValue thisValue) => new(ValueType.STRING, args[0].Value.ToString());
         #endregion
 
@@ -429,6 +451,31 @@ namespace ScriptRuntime.Runtime
             var info = CallbackManager.RegisterCallback((ScriptFunction)targetFunction.Value, abi,
                 (string)argTypes.Value, (string)retTypes.Value);
             return new VariableValue(ValueType.PTR, info.addr);
+        }
+
+        public static VariableValue FFIFunctionFromPtr(List<VariableValue> args, VariableValue thisValue)
+        {
+            nint funcPointer = (nint)args[0].Value;
+            string argDef = (string)args[1].Value;
+            string retDef = (string)args[2].Value;
+            string name = "funcPointer" + funcPointer.ToString();
+            var func = new ScriptFunction(name, FFIManager.NativeTypeMapper[retDef], argDef, retDef, funcPointer);
+            FunctionTable.TryAdd(name, func);
+            return new VariableValue(ValueType.FUNCTION, func);
+        }
+
+        public static VariableValue CreatePTR(List<VariableValue> args, VariableValue thisValue)
+        {
+            string input = (string)args[0].Value;
+            //判断是不是16进制
+            if (input.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+            {
+                return new VariableValue(ValueType.PTR, Convert.ToInt64(input.Substring(2), 16));
+            }
+            else
+            {
+                return new VariableValue(ValueType.PTR, Convert.ToInt64(input,10));
+            }
         }
 
         #endregion

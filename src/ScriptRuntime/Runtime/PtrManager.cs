@@ -45,7 +45,63 @@ namespace ScriptRuntime.Runtime
             {"copy",new ScriptFunction("copy",
                     new List<ValueType>(),
                     ValueType.PTR,PtrCopy) },
+            {"readPointer",new ScriptFunction("readPointer",
+                    new List<ValueType>(),
+                    ValueType.PTR,ReadPointer) },
+            {"readULong",new ScriptFunction("readULong",
+                    new List<ValueType>(),
+                    ValueType.NUM,ReadULong) },
+            {"readLong",new ScriptFunction("readLong",
+                    new List<ValueType>(),
+                    ValueType.NUM,ReadLong) },
+            {"readUInt",new ScriptFunction("readUInt",
+                    new List<ValueType>(),
+                    ValueType.NUM,ReadUInt) },
+            {"readInt",new ScriptFunction("readInt",
+                    new List<ValueType>(),
+                    ValueType.NUM,ReadInt) },
+            {"readUShort",new ScriptFunction("readUShort",
+                    new List<ValueType>(),
+                    ValueType.NUM,ReadUShort) },
+            {"readShort",new ScriptFunction("readShort",
+                    new List<ValueType>(),
+                    ValueType.NUM,ReadShort) },
+            {"readByte",new ScriptFunction("readByte",
+                    new List<ValueType>(),
+                    ValueType.NUM,ReadByte) },
         };
+        static unsafe VariableValue ReadPointer(List<VariableValue> args, VariableValue thisValue)
+        {
+            return new VariableValue(ValueType.PTR, (nint)(*(ulong*)(nint)thisValue.Value));
+        }
+        static unsafe VariableValue ReadULong(List<VariableValue> args, VariableValue thisValue)
+        {
+            return new VariableValue(ValueType.NUM, (double)(*(ulong*)(nint)thisValue.Value));
+        }
+        static unsafe VariableValue ReadLong(List<VariableValue> args, VariableValue thisValue)
+        {
+            return new VariableValue(ValueType.NUM, (double)(*(long*)(nint)thisValue.Value));
+        }
+        static unsafe VariableValue ReadInt(List<VariableValue> args, VariableValue thisValue)
+        {
+            return new VariableValue(ValueType.NUM, (double)(*(int*)(nint)thisValue.Value));
+        }
+        static unsafe VariableValue ReadUInt(List<VariableValue> args, VariableValue thisValue)
+        {
+            return new VariableValue(ValueType.NUM, (double)(*(uint*)(nint)thisValue.Value));
+        }
+        static unsafe VariableValue ReadUShort(List<VariableValue> args, VariableValue thisValue)
+        {
+            return new VariableValue(ValueType.NUM, (double)(*(ushort*)(nint)thisValue.Value));
+        }
+        static unsafe VariableValue ReadShort(List<VariableValue> args, VariableValue thisValue)
+        {
+            return new VariableValue(ValueType.NUM, (double)(*(short*)(nint)thisValue.Value));
+        }
+        static unsafe VariableValue ReadByte(List<VariableValue> args, VariableValue thisValue)
+        {
+            return new VariableValue(ValueType.NUM, (double)(*(byte*)(nint)thisValue.Value));
+        }
 
         static unsafe VariableValue PtrCopy(List<VariableValue> args, VariableValue thisValue)
         {

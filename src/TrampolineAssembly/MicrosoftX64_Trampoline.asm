@@ -21,28 +21,28 @@ mov qword [r11 + 16],r8 ;arg3
 
 mov qword [r11 + 24],r9 ;arg4
 
-mov r12,qword [rsp+40] ;arg5
+mov r12,qword [rsp+48] ;arg5
 mov qword [r11 + 32],r12
 
-mov r12,qword [rsp+48] ;arg6
+mov r12,qword [rsp+56] ;arg6
 mov qword [r11 + 40],r12
 
-mov r12,qword [rsp+56] ;arg7
+mov r12,qword [rsp+64] ;arg7
 mov qword [r11 + 48],r12
 
-mov r12,qword [rsp+64] ;arg8
+mov r12,qword [rsp+72] ;arg8
 mov qword [r11 + 56],r12
 
-mov r12,qword [rsp+72] ;arg9
+mov r12,qword [rsp+80] ;arg9
 mov qword [r11 + 64],r12
 
-mov r12,qword [rsp+80] ;arg10
+mov r12,qword [rsp+88] ;arg10
 mov qword [r11 + 72],r12
 
-mov r12,qword [rsp+88] ;arg11
+mov r12,qword [rsp+96] ;arg11
 mov qword [r11 + 80],r12
 
-mov r12,qword [rsp+96] ;arg12
+mov r12,qword [rsp+104] ;arg12
 mov qword [r11 + 88],r12
 
 mov rcx,rax ;arg1==func_id
