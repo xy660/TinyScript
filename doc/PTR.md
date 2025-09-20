@@ -42,6 +42,35 @@ println(newObj.width);
 // 输出 100
 ```
 
+## PTR.move()
+
+参数：
+- offset (NUM):移动的距离，支持负数，单位字节
+
+返回值：移动后的指针（本身）
+
+## PTR.copy()
+
+参数：无
+
+返回值：深拷贝后的新指针，调用move函数不会影响原有指针
+
+## PTR.readXXX()
+
+这是一组用于读取指针值的函数，有以下具体函数：
+
+- readByte()
+- readUShort()
+- readShort()
+- readUInt()
+- readInt()
+- readULong()
+- readLong()
+- readPointer()
+
+
+---
+
 关于如何约定结构体定义，参见FFI文档
 
 ### 注意事项
