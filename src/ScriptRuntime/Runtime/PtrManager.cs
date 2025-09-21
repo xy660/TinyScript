@@ -69,7 +69,84 @@ namespace ScriptRuntime.Runtime
             {"readByte",new ScriptFunction("readByte",
                     new List<ValueType>(),
                     ValueType.NUM,ReadByte) },
+            {"putPointer",new ScriptFunction("putPointer",
+                    new List<ValueType>(){ValueType.PTR},
+                    ValueType.PTR,WritePointer) },
+            {"putULong",new ScriptFunction("putULong",
+                    new List<ValueType>(){ValueType.NUM},
+                    ValueType.PTR,WriteULong) },
+            {"putLong",new ScriptFunction("putLong",
+                new List<ValueType>(){ValueType.NUM},
+                ValueType.PTR,WriteLong) },
+            {"putUInt",new ScriptFunction("putUInt",
+                new List<ValueType>(){ValueType.NUM},
+                ValueType.PTR,WriteUInt) },
+            {"putInt",new ScriptFunction("putInt",
+                new List<ValueType>(){ValueType.NUM},
+                ValueType.PTR,WriteInt) },
+            {"putUShort",new ScriptFunction("putUShort",
+                new List<ValueType>(){ValueType.NUM},
+                ValueType.PTR,WriteUShort) },
+            {"putShort",new ScriptFunction("putShort",
+                new List<ValueType>(){ValueType.NUM},
+                ValueType.PTR,WriteShort) },
+            {"putByte",new ScriptFunction("putByte",
+                new List<ValueType>(){ValueType.NUM},
+                ValueType.PTR,WriteByte) },
         };
+        static unsafe VariableValue WritePointer(List<VariableValue> args, VariableValue thisValue)
+        {
+            var p = (nint*)(nint)(thisValue.Value);
+            *p = (nint)(args[0].Value);
+            return thisValue;
+        }
+        static unsafe VariableValue WriteULong(List<VariableValue> args, VariableValue thisValue)
+        {
+            var p = (ulong*)(nint)(thisValue.Value);
+            *p = (ulong)(double)(args[0].Value);
+            return thisValue;
+        }
+        static unsafe VariableValue WriteLong(List<VariableValue> args, VariableValue thisValue)
+        {
+            var p = (long*)(nint)(thisValue.Value);
+            *p = (long)(double)(args[0].Value);
+            return thisValue;
+        }
+
+        static unsafe VariableValue WriteUInt(List<VariableValue> args, VariableValue thisValue)
+        {
+            var p = (uint*)(nint)(thisValue.Value);
+            *p = (uint)(double)(args[0].Value);
+            return thisValue;
+        }
+
+        static unsafe VariableValue WriteInt(List<VariableValue> args, VariableValue thisValue)
+        {
+            var p = (int*)(nint)(thisValue.Value);
+            *p = (int)(double)(args[0].Value);
+            return thisValue;
+        }
+
+        static unsafe VariableValue WriteUShort(List<VariableValue> args, VariableValue thisValue)
+        {
+            var p = (ushort*)(nint)(thisValue.Value);
+            *p = (ushort)(double)(args[0].Value);
+            return thisValue;
+        }
+
+        static unsafe VariableValue WriteShort(List<VariableValue> args, VariableValue thisValue)
+        {
+            var p = (short*)(nint)(thisValue.Value);
+            *p = (short)(double)(args[0].Value);
+            return thisValue;
+        }
+
+        static unsafe VariableValue WriteByte(List<VariableValue> args, VariableValue thisValue)
+        {
+            var p = (byte*)(nint)(thisValue.Value);
+            *p = (byte)(double)(thisValue.Value);
+            return thisValue;
+        }
         static unsafe VariableValue ReadPointer(List<VariableValue> args, VariableValue thisValue)
         {
             return new VariableValue(ValueType.PTR, (nint)(*(ulong*)(nint)thisValue.Value));
@@ -108,7 +185,7 @@ namespace ScriptRuntime.Runtime
             nint dest = 0;
             var p = &dest;
             *p = (nint)thisValue.Value;
-            return new VariableValue(ValueType.PTR,dest);
+            return new VariableValue(ValueType.PTR, dest);
         }
         static VariableValue PtrMove(List<VariableValue> args, VariableValue thisValue)
         {
@@ -117,7 +194,7 @@ namespace ScriptRuntime.Runtime
         }
         static VariableValue PtrToObject(List<VariableValue> args, VariableValue thisValue)
         {
-            var objContainer = FFIManager.PtrToObject((nint)thisValue.Value, (string)args[0].Value); 
+            var objContainer = FFIManager.PtrToObject((nint)thisValue.Value, (string)args[0].Value);
             return new VariableValue(ValueType.OBJECT, objContainer);
         }
         static VariableValue PtrToStringW(List<VariableValue> args, VariableValue thisValue)

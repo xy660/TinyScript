@@ -30,7 +30,7 @@ namespace ScriptRuntime.Core
     public class Interpreter
     {
 
-        public static string VersionString = "3.2.0";
+        public static string VersionString = "3.2.1";
 
         public static object GlobalLock = new object();
         public static bool VariableEquals(VariableValue left, VariableValue right)
