@@ -470,11 +470,11 @@ namespace ScriptRuntime.Runtime
             //判断是不是16进制
             if (input.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
             {
-                return new VariableValue(ValueType.PTR, Convert.ToInt64(input.Substring(2), 16));
+                return new VariableValue(ValueType.PTR, (nint)Convert.ToInt64(input.Substring(2), 16));
             }
             else
             {
-                return new VariableValue(ValueType.PTR, Convert.ToInt64(input,10));
+                return new VariableValue(ValueType.PTR, (nint)Convert.ToInt64(input,10));
             }
         }
 
