@@ -57,7 +57,7 @@ println(newObj.width);
 
 ## PTR.readXXX()
 
-这是一组用于读取指针值的函数，有以下具体函数：
+这是一组用于读取指针指向地址值的函数，有以下具体函数：
 
 - readByte()
 - readUShort()
@@ -68,6 +68,18 @@ println(newObj.width);
 - readLong()
 - readPointer()
 
+## PTR.putXXX()
+
+这是一组用于写入指针指向地址值的函数，有以下具体函数：
+
+- putByte([NUM]value)
+- putUShort([NUM]value)
+- putShort([NUM]value)
+- putUInt([NUM]value)
+- putInt([NUM]value)
+- putULong([NUM]value)
+- putLong([NUM]value)
+- putPointer([PTR]value)
 
 ---
 
