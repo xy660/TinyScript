@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection.Metadata;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -30,7 +31,7 @@ namespace ScriptRuntime.Core
     public class Interpreter
     {
 
-        public static string VersionString = "3.2.1";
+        public static string VersionString = "3.2.2";
 
         public static object GlobalLock = new object();
         public static bool VariableEquals(VariableValue left, VariableValue right)
@@ -867,12 +868,57 @@ namespace ScriptRuntime.Core
     }
     public class TaskContext
     {
+        public class TaskDict
+        {
+            Dictionary<ulong, TaskContext> ThreadContext = new Dictionary<ulong, TaskContext>();
+            public TaskContext this[ulong taskId]
+            {
+                get
+                {
+                    lock (ThreadContext)
+                    {
+                        return ThreadContext[taskId];
+                    }
+                }
+                set
+                {
+                    lock (ThreadContext)
+                    {
+                        ThreadContext[taskId] = value;
+                    }
+                }
+            }
+            public void Add(ulong taskId,TaskContext context)
+            {
+                lock (ThreadContext)
+                {
+                    ThreadContext.Add(taskId, context);
+                }
+            }
+            public void Remove(ulong taskId)
+            {
+                lock (ThreadContext)
+                {
+                    ThreadContext.Remove(taskId);
+                }
+            }
+            public bool ContainsKey(ulong taskId)
+            {
+                lock (ThreadContext)
+                {
+                    return ThreadContext.ContainsKey(taskId);
+                }
+            }
+        }
         public static ulong GetCurrentThreadId()
         {
             return NativeThread.GetCurrentNativeThreadId();
         }
 
-        public static Dictionary<ulong, TaskContext> ThreadContext = new Dictionary<ulong, TaskContext>();
+        //废弃，线程不安全
+        //public static Dictionary<ulong, TaskContext> ThreadContext = new Dictionary<ulong, TaskContext>();
+        public static TaskDict ThreadContext = new TaskDict();
+
 
         public Stack<ScriptFunction> StackTrace = new Stack<ScriptFunction>();
 

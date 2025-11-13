@@ -29,6 +29,9 @@ namespace ScriptRuntime.FFI
     {
 
         public const int ArgumentHeapSize = 1024;
+
+        public static object CBMLock = new object(); //回调管理器全局锁，为了线程安全
+
         public record CallbackInfo(nint addr,nint heap,int argc,ScriptFunction targetFunc,string[] nativeArgDef,string nativeRetDef,int id);
 
         //id寻找地址纪录类
@@ -95,7 +98,11 @@ namespace ScriptRuntime.FFI
             {
                 throw new ScriptException("不允许将非脚本函数注册为回调 FuncName=" + func.Name);
             }
-            var id = ++LastestFuncId; //自增id
+            int id;
+            lock (CBMLock) //保护自增id
+            {
+                id = ++LastestFuncId; //自增id
+            }
             
             if(!ABIMapper.ContainsKey(abi))
             {
@@ -118,9 +125,12 @@ namespace ScriptRuntime.FFI
 
 
             var info = new CallbackInfo((nint)pStubMemory, heap, func.FunctionArgumentNames.Count, func,nativeArgDefines.Split(','),retNativeType,id);
-            
-            Callbacks.Add(id, info);
-            Ptr2Callback.Add(info.addr, info);
+
+            lock (CBMLock)
+            {
+                Callbacks.Add(id, info);
+                Ptr2Callback.Add(info.addr, info);
+            }
 
             return info;
         }
@@ -128,11 +138,14 @@ namespace ScriptRuntime.FFI
         //删除回调桩，释放内存
         public unsafe static void UnregisterCallback(nint ptr)
         {
-            var info = Ptr2Callback[ptr];
-            NativeMemory.Free((void*)info.heap);
-            NativeMemoryManager.Free((void*)info.addr);
-            Ptr2Callback.Remove(ptr);
-            Callbacks.Remove(info.id); 
+            lock (CBMLock)
+            {
+                var info = Ptr2Callback[ptr];
+                NativeMemory.Free((void*)info.heap);
+                NativeMemoryManager.Free((void*)info.addr);
+                Ptr2Callback.Remove(ptr);
+                Callbacks.Remove(info.id);
+            }
         }
     }
 }
