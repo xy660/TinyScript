@@ -1,3 +1,10 @@
+# 注意
+
+本项目已经停止维护，请迁移至新项目：https://github.com/xy660/NexusEJS
+
+一个使用C++进行重构，为嵌入式而生的JavaScript方言运行时
+
+
 # TinyScript
 
  **一个轻量级脚本语言** | **A lightweigtht scripting language**  
